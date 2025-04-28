@@ -15,16 +15,20 @@ from briarmbg import BriaRMBG
 from enum import Enum
 from torch.hub import download_url_to_file
 
-
+#CHANGES
 # 'stablediffusionapi/realistic-vision-v51'
 # 'runwayml/stable-diffusion-v1-5'
-sd15_name = 'stablediffusionapi/realistic-vision-v51'
-tokenizer = CLIPTokenizer.from_pretrained(sd15_name, subfolder="tokenizer")
-text_encoder = CLIPTextModel.from_pretrained(sd15_name, subfolder="text_encoder")
-vae = AutoencoderKL.from_pretrained(sd15_name, subfolder="vae")
-unet = UNet2DConditionModel.from_pretrained(sd15_name, subfolder="unet")
-rmbg = BriaRMBG.from_pretrained("briaai/RMBG-1.4")
+# Cambiar la ruta base a tu carpeta local
+sd15_name = './models/realistic-vision-v51'  # ahora es una carpeta local, NO un modelo online
 
+# Cargar componentes de carpeta local
+tokenizer = CLIPTokenizer.from_pretrained(sd15_name + '/tokenizer')
+text_encoder = CLIPTextModel.from_pretrained(sd15_name + '/text_encoder')
+vae = AutoencoderKL.from_pretrained(sd15_name + '/vae')
+unet = UNet2DConditionModel.from_pretrained(sd15_name + '/unet')
+rmbg = BriaRMBG.from_pretrained("./models/bria-rmbg")  # suponiendo que también descargas esto
+
+#ENDchanges
 # Change UNet
 
 with torch.no_grad():
@@ -48,11 +52,12 @@ def hooked_unet_forward(sample, timestep, encoder_hidden_states, **kwargs):
 unet.forward = hooked_unet_forward
 
 # Load
-
+# Cargar el modelo de fine-tuning (ya descargado manualmente)
 model_path = './models/iclight_sd15_fc.safetensors'
 
 if not os.path.exists(model_path):
-    download_url_to_file(url='https://huggingface.co/lllyasviel/ic-light/resolve/main/iclight_sd15_fc.safetensors', dst=model_path)
+    raise FileNotFoundError(f"Model file {model_path} not found. Please download it manually.")
+
 
 sd_offset = sf.load_file(model_path)
 sd_origin = unet.state_dict()
